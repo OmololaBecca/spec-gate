@@ -1,0 +1,9 @@
+{
+  "id": "01-initial",
+  "title": "AI builds the signup feature from the spec",
+  "spec": "specs/signup.spec.json",
+  "implementation": "implementations/01-initial/signup.js",
+  "baseline": null,
+  "expectedVerdict": "NEEDS_HUMAN",
+  "story": "First version of a high-risk feature. Everything passes, but with no approved baseline a human signs it off once. After that it becomes the baseline."
+}

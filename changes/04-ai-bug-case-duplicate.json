@@ -1,0 +1,9 @@
+{
+  "id": "04-ai-bug-case-duplicate",
+  "title": "AI refactor drops email lower-casing",
+  "spec": "specs/signup.spec.json",
+  "implementation": "implementations/04-ai-bug-case-duplicate/signup.js",
+  "baseline": "implementations/01-initial/signup.js",
+  "expectedVerdict": "BLOCKED",
+  "story": "Subtle bug: Ada@example.com and ada@example.com become two accounts (account takeover / duplicate risk). Caught by the normalize rule in the spec."
+}

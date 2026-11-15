@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+*.log
+
+# Personal speaking notes for the demo video - not part of the submission
+DEMO-SCRIPT.md

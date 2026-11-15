@@ -1,0 +1,9 @@
+{
+  "id": "07-hash-upgrade",
+  "title": "AI strengthens hashing (32 -> 64 byte key)",
+  "spec": "specs/signup.spec.json",
+  "implementation": "implementations/07-hash-upgrade/signup.js",
+  "baseline": "implementations/01-initial/signup.js",
+  "expectedVerdict": "NEEDS_HUMAN",
+  "story": "A correct change, but it touches password hashing. The gate escalates it and shows the human only the 2 lines that changed, not the whole file."
+}

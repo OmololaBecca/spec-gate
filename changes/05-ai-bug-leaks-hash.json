@@ -1,0 +1,9 @@
+{
+  "id": "05-ai-bug-leaks-hash",
+  "title": "AI returns the whole user object for convenience",
+  "spec": "specs/signup.spec.json",
+  "implementation": "implementations/05-ai-bug-leaks-hash/signup.js",
+  "baseline": "implementations/01-initial/signup.js",
+  "expectedVerdict": "BLOCKED",
+  "story": "Security bug: the password hash is sent back to the client. Caught by the security.neverReturn rule."
+}

@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spec Gate · Signup</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .signup { padding: 32px 28px; }
+  .signup h2 { margin: 0; font-size: 22px; letter-spacing: -.01em; }
+  .signup .lead { margin: 4px 0 24px; color: var(--muted); }
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  .input-wrap { position: relative; }
+  .field input { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text); outline: none; transition: border-color .15s, box-shadow .15s; }
+  .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .input-wrap input { padding-right: 64px; }
+  .toggle-pw { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: none; color: var(--accent); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 4px 8px; }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .rules { list-style: none; margin: 8px 0 0; padding: 0; font-size: 13px; color: var(--muted); display: grid; gap: 3px; }
+  .rules li::before { content: "○"; display: inline-block; width: 18px; color: var(--grey); }
+  .rules li.ok { color: var(--green); }
+  .rules li.ok::before { content: "✓"; color: var(--green); }
+  .alert { border-radius: 9px; padding: 12px 14px; margin-bottom: 18px; font-size: 14px; }
+  .alert ul { margin: 4px 0 0; padding-left: 18px; }
+  .alert-success { background: var(--green-bg); color: var(--green); }
+  .alert-error { background: var(--red-bg); color: var(--red); }
+  .fineprint { font-size: 12px; color: var(--muted); text-align: center; margin: 14px 0 0; }
+
+  .panel { padding: 20px; display: grid; gap: 22px; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .panel-head h2 { margin: 0; font-size: 16px; }
+  select { width: 100%; font: inherit; padding: 9px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text); }
+  .version-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+  .tries { display: grid; gap: 8px; }
+  .try { text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-weight: 500; }
+  .try small { color: var(--muted); font-weight: 400; }
+  .status-line { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; }
+  .status { font-family: var(--mono); font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+  .status.s2 { background: var(--green-bg); color: var(--green); }
+  .status.s4 { background: var(--red-bg); color: var(--red); }
+  .leak { background: var(--red-bg); color: var(--red); border-radius: 9px; padding: 10px 12px; font-size: 13px; font-weight: 600; margin-top: 8px; }
+  .muted { color: var(--muted); font-size: 14px; margin: 0; }
+  .store { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; }
+
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } .signup { padding: 24px 20px; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/"><span class="brand-mark">✓</span><span>Spec Gate</span></a>
+    <nav class="nav">
+      <a href="/">Gate dashboard</a>
+      <a href="/signup" class="active">Signup page</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <div class="page-head">
+    <div>
+      <h1>Signup page</h1>
+      <p>A real signup form, as an end user sees it. Switch the code version on the right to see what each AI-written change actually does to users.</p>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- What the end user sees -->
+    <section class="card signup">
+      <h2>Create your account</h2>
+      <p class="lead">It only takes a minute.</p>
+      <div id="alert"></div>
+      <form id="form" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" name="username" autocomplete="username" placeholder="ada_lovelace">
+          <div class="hint" id="username-hint"></div>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="input-wrap">
+            <input id="password" name="password" type="password" autocomplete="new-password">
+            <button type="button" class="toggle-pw" id="togglePw">Show</button>
+          </div>
+          <ul class="rules" id="rules"></ul>
+        </div>
+        <button class="btn btn-primary btn-block" id="submit" type="submit">Create account</button>
+        <p class="fineprint">Hints in the browser are only a guide. The server always makes the final decision.</p>
+      </form>
+    </section>
+
+    <!-- Behind the scenes, for the demo -->
+    <aside class="card panel">
+      <div>
+        <div class="panel-head"><h2>Behind the scenes</h2></div>
+        <p class="muted" style="margin-top:4px">Which AI-written version of the signup code is running?</p>
+        <div style="margin-top:12px">
+          <select id="version" aria-label="Code version"></select>
+          <div class="version-meta" id="versionMeta"></div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="section-title">Try these</h3>
+        <div class="tries">
+          <button class="btn try" data-fill="valid">Normal signup <small>check the response</small></button>
+          <button class="btn try" data-fill="shortPassword">10-character password <small>spec requires 12</small></button>
+          <button class="btn try" data-fill="capitals">Same email in CAPITALS <small>after a normal signup</small></button>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="section-title">Server response</h3>
+        <div id="response"><p class="muted">Submit the form to see the raw response from the server.</p></div>
+      </div>
+
+      <div class="store">
+        <span id="storeCount">0 users stored in this version</span>
+        <button class="btn btn-sm" id="reset">Reset all data</button>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let spec, versions = [];
+
+// Password + username rules come straight from specs/signup.spec.json
+function buildRules() {
+  const p = spec.inputs.password;
+  const u = spec.inputs.username;
+  const rules = [[`${p.minLength}–${p.maxLength} characters`, (v) => v.length >= p.minLength && v.length <= p.maxLength]];
+  if (p.mustContain.includes('letter')) rules.push(['At least one letter', (v) => /[a-zA-Z]/.test(v)]);
+  if (p.mustContain.includes('digit')) rules.push(['At least one number', (v) => /[0-9]/.test(v)]);
+  $('username-hint').textContent = `${u.minLength}–${u.maxLength} characters: letters, numbers and underscores.`;
+  const render = () => {
+    const v = $('password').value;
+    $('rules').innerHTML = rules.map(([label, test]) => `<li class="${test(v) ? 'ok' : ''}">${label}</li>`).join('');
+  };
+  $('password').addEventListener('input', render);
+  render();
+}
+
+function verdictLabel(v) { return v.replace('_', ' ').toLowerCase(); }
+
+function showVersion() {
+  const v = versions.find((x) => x.id === $('version').value);
+  $('versionMeta').innerHTML = `<span>Gate verdict:</span><span class="badge ${v.expectedVerdict}">${verdictLabel(v.expectedVerdict).toUpperCase()}</span>`;
+  $('storeCount').textContent = `${v.users} user${v.users === 1 ? '' : 's'} stored in this version`;
+}
+
+async function loadVersions(keep) {
+  versions = await (await fetch('/api/implementations')).json();
+  $('version').innerHTML = versions.map((v) => `<option value="${esc(v.id)}">${esc(v.id)} · ${esc(v.title)}</option>`).join('');
+  if (keep) $('version').value = keep;
+  showVersion();
+}
+
+function showAlert(res) {
+  if (res.status >= 200 && res.status < 300) {
+    $('alert').innerHTML = `<div class="alert alert-success"><b>Account created.</b> Welcome, ${esc(res.body.username)}!</div>`;
+    $('form').reset();
+    $('password').dispatchEvent(new Event('input'));
+  } else {
+    const errors = (res.body && res.body.errors) || ['Something went wrong.'];
+    $('alert').innerHTML = `<div class="alert alert-error"><b>${res.status === 409 ? 'That email is already registered.' : 'Please fix the following:'}</b>${res.status === 409 ? '' : `<ul>${errors.map((e) => `<li>${esc(e)}</li>`).join('')}</ul>`}</div>`;
+  }
+}
+
+function showResponse(res) {
+  const body = JSON.stringify(res.body, null, 2);
+  const leaked = spec.security.neverReturn.filter((k) => body.includes(`"${k}"`));
+  $('response').innerHTML =
+    `<div class="status-line"><span class="status ${res.status < 300 ? 's2' : 's4'}">${res.status}</span><span>${res.status === 201 ? 'Created' : res.status === 409 ? 'Conflict (duplicate)' : res.status === 400 ? 'Bad request' : ''}</span></div>` +
+    `<pre class="code">${esc(body)}</pre>` +
+    (leaked.length ? `<div class="leak">⚠ Security bug: the response exposes ${leaked.join(', ')}. The spec says this must never be returned.</div>` : '');
+}
+
+$('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = $('submit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    const input = { email: $('email').value, username: $('username').value, password: $('password').value };
+    const res = await (await fetch('/api/signup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ implementation: $('version').value, input }),
+    })).json();
+    if (res.error) throw new Error(res.error);
+    showAlert(res);
+    showResponse(res);
+    const v = versions.find((x) => x.id === $('version').value);
+    v.users = res.storedUsers;
+    showVersion();
+  } catch (err) {
+    $('alert').innerHTML = `<div class="alert alert-error">Could not reach the server: ${esc(err.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create account';
+  }
+});
+
+const FILLS = {
+  valid: () => ({ ...spec.example }),
+  shortPassword: () => ({ email: 'grace@example.com', username: 'grace_hopper', password: 'shortpass1' }),
+  capitals: () => ({ ...spec.example, email: spec.example.email.toUpperCase(), username: 'ada_again' }),
+};
+document.querySelectorAll('[data-fill]').forEach((b) => b.addEventListener('click', () => {
+  const v = FILLS[b.dataset.fill]();
+  $('email').value = v.email;
+  $('username').value = v.username;
+  $('password').value = v.password;
+  $('password').dispatchEvent(new Event('input'));
+  $('alert').innerHTML = '';
+}));
+
+$('togglePw').addEventListener('click', () => {
+  const show = $('password').type === 'password';
+  $('password').type = show ? 'text' : 'password';
+  $('togglePw').textContent = show ? 'Hide' : 'Show';
+});
+
+$('version').addEventListener('change', () => { showVersion(); $('alert').innerHTML = ''; });
+$('reset').addEventListener('click', async () => {
+  await fetch('/api/reset', { method: 'POST' });
+  await loadVersions($('version').value);
+  $('alert').innerHTML = '';
+  $('response').innerHTML = '<p class="muted">All stored users cleared.</p>';
+});
+
+(async function init() {
+  try {
+    spec = await (await fetch('/api/spec')).json();
+    buildRules();
+    await loadVersions();
+  } catch (err) {
+    $('alert').innerHTML = `<div class="alert alert-error">Could not reach the server. Is <code>npm run web</code> running?</div>`;
+  }
+})();
+</script>
+</body>
+</html>

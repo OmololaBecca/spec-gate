@@ -1,0 +1,57 @@
+{
+  "feature": "user-signup",
+  "version": 1,
+  "description": "A new user creates an account with email, username and password.",
+  "operation": "signup",
+  "riskLevel": "high",
+
+  "inputs": {
+    "email": {
+      "type": "string",
+      "required": true,
+      "format": "email",
+      "maxLength": 254,
+      "unique": true,
+      "normalize": ["trim", "lowercase"]
+    },
+    "username": {
+      "type": "string",
+      "required": true,
+      "minLength": 3,
+      "maxLength": 20,
+      "pattern": "^[a-zA-Z0-9_]+$"
+    },
+    "password": {
+      "type": "string",
+      "required": true,
+      "minLength": 12,
+      "maxLength": 128,
+      "mustContain": ["letter", "digit"],
+      "secret": true
+    }
+  },
+
+  "example": {
+    "email": "ada@example.com",
+    "username": "ada_lovelace",
+    "password": "analytical1843engine"
+  },
+
+  "responses": {
+    "success": { "status": 201, "bodyFields": ["id", "email", "username"] },
+    "validationError": { "status": 400 },
+    "duplicate": { "status": 409 }
+  },
+
+  "security": {
+    "storage": { "password": "hashed" },
+    "neverReturn": ["password", "passwordHash"],
+    "forbiddenPatterns": [
+      { "pattern": "md5", "reason": "MD5 is broken and must never be used for passwords" },
+      { "pattern": "sha1", "reason": "SHA-1 is too fast and weak for password hashing" },
+      { "pattern": "console.log", "reason": "Logging inside signup risks leaking secrets to log files" },
+      { "pattern": "Math.random", "reason": "Math.random is not cryptographically secure" }
+    ],
+    "sensitiveKeywords": ["password", "hash", "crypto", "scrypt", "salt", "secret"]
+  }
+}

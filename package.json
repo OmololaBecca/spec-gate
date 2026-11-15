@@ -1,0 +1,15 @@
+{
+  "name": "spec-gate",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A spec-driven quality gate that decides whether AI-written code ships, goes back to the AI, or needs a human.",
+  "scripts": {
+    "demo": "node pipeline/run.js changes",
+    "web": "node web/server.js",
+    "gate": "node pipeline/run.js",
+    "test": "node --test tests/"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

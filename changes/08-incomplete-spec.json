@@ -1,0 +1,9 @@
+{
+  "id": "08-incomplete-spec",
+  "title": "Rough ticket goes straight to the AI",
+  "spec": "specs/signup-incomplete.spec.json",
+  "implementation": "implementations/01-initial/signup.js",
+  "baseline": "implementations/01-initial/signup.js",
+  "expectedVerdict": "BLOCKED",
+  "story": "The spec itself is vague (no max lengths, no duplicate rule, password not marked secret). Blocked before any code runs - the cheapest place to find a defect."
+}

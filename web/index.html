@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spec Gate · Dashboard</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+  .kpi { padding: 16px; }
+  .kpi-label { font-size: 13px; color: var(--muted); }
+  .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -.02em; margin-top: 2px; }
+  .kpi-value.green { color: var(--green); } .kpi-value.red { color: var(--red); } .kpi-value.amber { color: var(--amber); }
+  .kpi-note { font-size: 12px; color: var(--muted); }
+
+  .pipeline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 24px; font-size: 13px; color: var(--muted); }
+  .pipeline .step { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; color: var(--text); font-weight: 500; }
+  .pipeline .step b { color: var(--accent); margin-right: 4px; }
+
+  .table { overflow: hidden; }
+  .table-head, .row-main { display: grid; grid-template-columns: 44px 1fr 150px 150px 96px; align-items: center; gap: 12px; padding: 12px 20px; }
+  .table-head { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  .row { border-bottom: 1px solid var(--border); }
+  .row:last-child { border-bottom: 0; }
+  .row-main { cursor: pointer; }
+  .row-main:hover { background: var(--surface-2); }
+  .num { font-family: var(--mono); color: var(--muted); font-size: 13px; }
+  .row-title { font-weight: 600; }
+  .row-sub { color: var(--muted); font-size: 13px; }
+  .stages { display: flex; gap: 5px; }
+  .dot { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: var(--surface-2); color: var(--grey); }
+  .dot.pass { background: var(--green-bg); color: var(--green); }
+  .dot.fail { background: var(--red-bg); color: var(--red); }
+  .dot.warn { background: var(--amber-bg); color: var(--amber); }
+  .row-detail { display: none; padding: 4px 20px 20px 76px; }
+  .row.open .row-detail { display: block; }
+  .story { color: var(--muted); margin: 0 0 12px; }
+  .reason { font-weight: 600; margin: 0 0 12px; }
+  .detail-grid { display: grid; gap: 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { background: var(--surface-2); border-radius: 8px; padding: 4px 10px; font-size: 13px; }
+  .chip.fail { color: var(--red); background: var(--red-bg); }
+  ul.feedback { margin: 0; padding-left: 18px; font-size: 14px; }
+  ul.feedback li { margin: 3px 0; }
+  .expect { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .expect.ok::before { content: "✓ "; color: var(--green); }
+  .expect.bad::before { content: "✗ "; color: var(--red); }
+  .empty-hint { color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 860px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .table-head { display: none; }
+    .row-main { grid-template-columns: 32px 1fr auto; grid-template-areas: "num title run" ". stages verdict"; row-gap: 8px; }
+    .row-main .num { grid-area: num; } .row-main .cell-title { grid-area: title; } .row-main .stages { grid-area: stages; }
+    .row-main .cell-verdict { grid-area: verdict; } .row-main .cell-run { grid-area: run; }
+    .row-detail { padding: 4px 16px 16px; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/"><span class="brand-mark">✓</span><span>Spec Gate</span></a>
+    <nav class="nav">
+      <a href="/" class="active">Gate dashboard</a>
+      <a href="/signup">Signup page</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <div class="page-head">
+    <div>
+      <h1>Quality gate for AI-written code</h1>
+      <p>Every change an AI agent makes to <b>user signup</b> is checked against the spec. The gate decides: ship it, send it back, or ask a human.</p>
+    </div>
+    <button class="btn btn-primary" id="runAll">Run all scenarios</button>
+  </div>
+
+  <section class="kpis">
+    <div class="card kpi"><div class="kpi-label">Auto-approved</div><div class="kpi-value green" id="k-approved">–</div><div class="kpi-note">no human needed</div></div>
+    <div class="card kpi"><div class="kpi-label">Blocked</div><div class="kpi-value red" id="k-blocked">–</div><div class="kpi-note">sent back to the AI</div></div>
+    <div class="card kpi"><div class="kpi-label">Needs a human</div><div class="kpi-value amber" id="k-human">–</div><div class="kpi-note">risky lines only</div></div>
+    <div class="card kpi"><div class="kpi-label">Test strength</div><div class="kpi-value" id="k-strength">–</div><div class="kpi-note">planted bugs caught</div></div>
+    <div class="card kpi"><div class="kpi-label">Total time</div><div class="kpi-value" id="k-time">–</div><div class="kpi-note" id="k-match">for all checks</div></div>
+  </section>
+
+  <div class="pipeline" aria-label="Gate stages">
+    <span class="step"><b>1</b>Spec lint</span>→
+    <span class="step"><b>2</b>Security rules</span>→
+    <span class="step"><b>3</b>Spec tests</span>→
+    <span class="step"><b>4</b>Test strength</span>→
+    <span class="step"><b>5</b>Risk gate</span>
+  </div>
+
+  <section class="card table">
+    <div class="table-head"><span>#</span><span>Change by the AI agent</span><span>Stages 1–5</span><span>Verdict</span><span></span></div>
+    <div id="rows"></div>
+  </section>
+</main>
+
+<script>
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const results = {};
+let changes = [];
+
+function stageDots(r) {
+  if (!r) return [1, 2, 3, 4, 5].map((n) => `<span class="dot" title="not run">${n}</span>`).join('');
+  const s = r.stages;
+  const st = (stage, n, label) => {
+    let cls = '', title = `${label}: not run`;
+    if (stage && stage.skipped) title = `${label}: skipped (${stage.reason})`;
+    else if (stage && 'passed' in stage) { cls = stage.passed ? 'pass' : 'fail'; title = `${label}: ${stage.passed ? 'passed' : 'failed'}`; }
+    return `<span class="dot ${cls}" title="${esc(title)}">${n}</span>`;
+  };
+  const risk = s.risk ? `<span class="dot ${s.risk.level === 'high' ? 'warn' : 'pass'}" title="Risk gate: ${s.risk.level} risk">5</span>` : `<span class="dot" title="Risk gate: not run">5</span>`;
+  return st(s.specLint, 1, 'Spec lint') + st(s.securityRules, 2, 'Security rules') + st(s.specTests, 3, 'Spec tests') + st(s.mutation, 4, 'Test strength') + risk;
+}
+
+function detail(c, r) {
+  if (!r) return `<p class="story">${esc(c.story)}</p><p class="empty-hint">Run this scenario to see the gate's decision.</p>`;
+  const s = r.stages;
+  const chips = [];
+  if (s.specLint) chips.push(`<span class="chip ${s.specLint.passed ? '' : 'fail'}">Spec lint: ${s.specLint.passed ? 'complete' : s.specLint.problems.length + ' gaps'}</span>`);
+  if (s.securityRules) chips.push(`<span class="chip ${s.securityRules.passed ? '' : 'fail'}">Security violations: ${s.securityRules.violations.length}</span>`);
+  if (s.specTests) chips.push(`<span class="chip ${s.specTests.passed ? '' : 'fail'}">Spec tests: ${s.specTests.total - s.specTests.failed.length}/${s.specTests.total} passed</span>`);
+  if (s.mutation && !s.mutation.skipped) chips.push(`<span class="chip">Test strength: ${Math.round(s.mutation.score * 100)}% (${s.mutation.killed}/${s.mutation.total})</span>`);
+  chips.push(`<span class="chip">${r.durationMs} ms</span>`);
+
+  let html = `<p class="story">${esc(c.story)}</p><p class="reason">${esc(r.reason)}</p><div class="detail-grid"><div class="chips">${chips.join('')}</div>`;
+  if (r.feedback.length) html += `<div><h3 class="section-title">Feedback sent back to the AI agent</h3><ul class="feedback">${r.feedback.map((f) => `<li>${esc(f)}</li>`).join('')}</ul></div>`;
+  if (s.risk && s.risk.changed && s.risk.changed.length) {
+    const sens = new Set(s.risk.sensitive.map((l) => l.kind + l.text));
+    const title = r.verdict === 'NEEDS_HUMAN' ? 'Lines a human must review (⚠ sensitive)' : 'What the AI changed';
+    html += `<div><h3 class="section-title">${title}</h3><pre class="code">${s.risk.changed.map((l) =>
+      `<span class="${l.kind === '+' ? 'add' : 'del'}">${l.kind} ${esc(l.text)}${sens.has(l.kind + l.text) ? '   ⚠' : ''}</span>`).join('\n')}</pre></div>`;
+  }
+  return html + '</div>';
+}
+
+function renderRow(c, i, running = false) {
+  const r = results[c.id];
+  const verdict = r ? `<span class="badge ${r.verdict}">${r.verdict.replace('_', ' ')}</span>` : `<span class="badge PENDING">NOT RUN</span>`;
+  const expect = r ? `<div class="expect ${r.verdict === r.expectedVerdict ? 'ok' : 'bad'}">expected ${esc(r.expectedVerdict.replace('_', ' ').toLowerCase())}</div>` : '';
+  return `
+    <div class="row-main" data-toggle="${esc(c.id)}">
+      <span class="num">${String(i + 1).padStart(2, '0')}</span>
+      <div class="cell-title"><div class="row-title">${esc(c.title)}</div><div class="row-sub">${esc(c.id)}</div></div>
+      <div class="stages">${stageDots(r)}</div>
+      <div class="cell-verdict">${verdict}${expect}</div>
+      <div class="cell-run"><button class="btn btn-sm" data-run="${esc(c.id)}" ${running ? 'disabled' : ''}>${running ? '<span class="spinner"></span>' : r ? 'Re-run' : 'Run'}</button></div>
+    </div>
+    <div class="row-detail">${detail(c, r)}</div>`;
+}
+
+function paint(id, running) {
+  const i = changes.findIndex((c) => c.id === id);
+  const el = document.getElementById(`row-${id}`);
+  el.innerHTML = renderRow(changes[i], i, running);
+}
+
+function updateKpis() {
+  const done = Object.values(results);
+  const count = (v) => done.filter((r) => r.verdict === v).length;
+  const set = (id, v) => (document.getElementById(id).textContent = v);
+  if (!done.length) return;
+  set('k-approved', count('AUTO_APPROVED'));
+  set('k-blocked', count('BLOCKED'));
+  set('k-human', count('NEEDS_HUMAN'));
+  const scores = done.map((r) => r.stages.mutation).filter((m) => m && !m.skipped);
+  if (scores.length) set('k-strength', Math.round(Math.max(...scores.map((m) => m.score)) * 100) + '%');
+  set('k-time', (done.reduce((t, r) => t + r.durationMs, 0) / 1000).toFixed(1) + 's');
+  set('k-match', `${done.filter((r) => r.verdict === r.expectedVerdict).length}/${done.length} as expected`);
+}
+
+async function run(id) {
+  paint(id, true);
+  try {
+    const res = await fetch(`/api/run/${encodeURIComponent(id)}`, { method: 'POST' });
+    const r = await res.json();
+    if (!res.ok) throw new Error(r.error);
+    results[id] = r;
+  } catch (err) {
+    alert(`Could not run ${id}: ${err.message}`);
+  }
+  paint(id, false);
+  document.getElementById(`row-${id}`).classList.add('open');
+  updateKpis();
+}
+
+document.getElementById('rows').addEventListener('click', (e) => {
+  const runBtn = e.target.closest('[data-run]');
+  if (runBtn) { e.stopPropagation(); return run(runBtn.dataset.run); }
+  const toggle = e.target.closest('[data-toggle]');
+  if (toggle) document.getElementById(`row-${toggle.dataset.toggle}`).classList.toggle('open');
+});
+
+document.getElementById('runAll').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Running…';
+  for (const c of changes) await run(c.id);
+  btn.disabled = false;
+  btn.textContent = 'Run all scenarios';
+});
+
+(async function init() {
+  try {
+    changes = await (await fetch('/api/changes')).json();
+    document.getElementById('rows').innerHTML = changes.map((c, i) => `<div class="row" id="row-${esc(c.id)}">${renderRow(c, i)}</div>`).join('');
+  } catch (err) {
+    document.getElementById('rows').innerHTML = `<p class="card-pad empty-hint">Could not reach the gate server. Is <code>npm run web</code> running?</p>`;
+  }
+})();
+</script>
+</body>
+</html>

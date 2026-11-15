@@ -1,0 +1,9 @@
+{
+  "id": "06-ai-bug-md5",
+  "title": "AI switches password hashing to MD5 \"for speed\"",
+  "spec": "specs/signup.spec.json",
+  "implementation": "implementations/06-ai-bug-md5/signup.js",
+  "baseline": "implementations/01-initial/signup.js",
+  "expectedVerdict": "BLOCKED",
+  "story": "Every functional test PASSES here - the hash is salted and not plain text. Only the static security rules catch it. Shows why tests alone are not enough."
+}

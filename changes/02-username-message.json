@@ -1,0 +1,9 @@
+{
+  "id": "02-username-message",
+  "title": "AI rewords the username error message",
+  "spec": "specs/signup.spec.json",
+  "implementation": "implementations/02-username-message/signup.js",
+  "baseline": "implementations/01-initial/signup.js",
+  "expectedVerdict": "AUTO_APPROVED",
+  "story": "Low-risk change. All checks pass and no sensitive code was touched, so it ships with zero human time."
+}

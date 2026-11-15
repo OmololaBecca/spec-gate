@@ -1,0 +1,23 @@
+{
+  "feature": "user-signup",
+  "version": 1,
+  "description": "A typical rough requirement: 'users sign up with email, username and password'. Written quickly, the way most tickets are.",
+  "operation": "signup",
+  "riskLevel": "high",
+
+  "inputs": {
+    "email": { "type": "string", "required": true, "format": "email", "unique": true },
+    "username": { "type": "string", "required": true, "minLength": 3 },
+    "password": { "type": "string", "required": true, "minLength": 8 }
+  },
+
+  "example": {
+    "email": "ada@example.com",
+    "username": "ada_lovelace",
+    "password": "analytical1843engine"
+  },
+
+  "responses": {
+    "success": { "status": 201, "bodyFields": ["id", "email", "username"] }
+  }
+}
