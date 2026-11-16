@@ -32,7 +32,7 @@
 4. **The mutation check found real spec gaps.** The 2 surviving mutants exposed an actual ambiguity: the spec doesn't say if the 254-char email limit applies before or after trimming spaces. The gate found a question in the *requirements*, not just the code.
 5. **Focused human review.** Instead of "review this PR", the human is told "review these 2 lines".
 
-## Limitations (honest)
+## Limitations
 
 1. **The gate is only as good as the spec — scenario 09 proves it.** The AI kept every raw signup (including plain-text passwords) in memory. The spec never said "don't keep input elsewhere", no keyword matched (`recentSignups.push(input)`), and the tests only inspect the user store. It was auto-approved. **This is the most important finding:** keyword-based risk detection can be bypassed by innocent-looking names.
 2. **Keyword risk detection is shallow.** It sees text, not meaning. It would also be fooled by renaming `password` to `pw`.
