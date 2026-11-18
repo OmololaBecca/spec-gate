@@ -1,6 +1,6 @@
 # intent.md — Problem Definition
 
-## The problem in one sentence
+## The problem
 
 **AI can write code in minutes, but teams still review it by hand for hours, because nobody trusts the green tick. The AI often wrote the tests too, so the tests just agree with the code.**
 
