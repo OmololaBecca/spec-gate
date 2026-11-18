@@ -2,7 +2,7 @@
 
 ## The problem in one sentence
 
-**AI can write code in minutes, but teams still review it by hand for hours, because nobody trusts the green tick — the AI often wrote the tests too, so the tests just agree with the code.**
+**AI can write code in minutes, but teams still review it by hand for hours, because nobody trusts the green tick. The AI often wrote the tests too, so the tests just agree with the code.**
 
 ## What I observed
 
@@ -14,7 +14,7 @@ rough ticket → AI writes code → AI (or dev) writes tests → tests pass → 
 
 Every step looks automated, but the last step — the human review — is where all the real trust lives. That is why lead time stays in hours or days, not minutes.
 
-## Root causes (why the human can't be removed yet)
+## Root causes
 
 | # | Root cause | What goes wrong |
 |---|---|---|
@@ -44,11 +44,11 @@ Each root cause maps to one stage:
 
 ## Domain chosen: user signup
 
-Small enough to build in days, but full of real risk: password storage, data leaks, duplicate accounts, input validation. Every reviewer understands it instantly.
+This is a user signup feature built by AI, but full of real risk: password storage, data leaks, duplicate accounts, input validation.
 
 ## Assumptions
 
-- A spec can be written in a structured format (JSON here). In a real team, an AI could help turn a rough ticket into this spec, and the spec lint tells it what is still missing.
+- A spec can be written in a structured format. In a real team, an AI could help turn a rough ticket into this spec, and the spec lint tells it what is still missing.
 - The spec is reviewed by a human **once**, when it is created. After that, the spec is the source of truth, not individual code reviews.
 - The "AI-written" implementations in this repo are hand-crafted to reproduce realistic AI mistakes, so results are repeatable. In production, an agent would generate them.
 - Humans stay in the loop for high-risk changes. The goal is **near-zero** intervention, not zero — and to make the remaining human time small and focused.
